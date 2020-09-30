@@ -9,7 +9,6 @@
   </parameter>
   <parameter name="host">
     <description>Server Hostname</description>
-    <required/>
   </parameter>
   <parameter name="port">
     <description>Used Port</description>
@@ -20,6 +19,24 @@
   </parameter>
   <parameter name="filename">
     <description>Stored with this file name. Otherwise with the file name as reported by the server.</description>
+  </parameter>
+  <parameter name="url">
+    <description>url to download</description>
+  </parameter>
+  <parameter name="prefer-old">
+    <description>reuse files from previous run if possible</description>
+    <allowedvalue>enable</allowedvalue>
+    <allowedvalue>disable</allowedvalue>
+  </parameter>
+  <parameter name="enforceipv4">
+    <description>Enforce IPv4 hostname resolution. This is currently the default due to too many invalid configured servers.</description>
+    <allowedvalue>enable</allowedvalue>
+    <allowedvalue>disable</allowedvalue>
+  </parameter>
+  <parameter name="sslvalidation">
+    <description>Disable SSL verification on download.</description>
+    <allowedvalue>enable</allowedvalue>
+    <allowedvalue>disable</allowedvalue>
   </parameter>
 </service>
 
