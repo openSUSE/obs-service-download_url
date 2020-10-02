@@ -2,6 +2,7 @@
 
 #
 # Copyright (c) 2009 Adrian Schroeter, SUSE Linux Products GmbH.
+# Copyright (c) 2020 SUSE LLC
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -21,70 +22,99 @@
 
 
 # defaults
-MYPROTOCOL="http"
-MYHOST=""
-MYPORT=""
+protocol="http"
+host=
+port=
+prefer_old=
+enforceipv4='enable'
+sslvalidation='disable'
+args=()
 
 while test $# -gt 0; do
   case $1 in
     *-host)
-      MYHOST="$2"
+      host="$2"
       shift
     ;;
     *-port)
-      MYPORT=":$2"
+      port="$2"
       shift
     ;;
     *-protocol)
-      MYPROTOCOL="$2"
+      protocol="$2"
       shift
     ;;
     *-path)
-      MYPATH="${2#/}"
+      path="${2#/}"
       shift
     ;;
     *-filename)
-      MYFILENAME="${2#/}"
+      filename="${2#/}"
       shift
     ;;
     *-outdir)
-      MYOUTDIR="$2"
+      outdir="$2"
+      shift
+    ;;
+    *-url)
+      url="$2"
+      shift
+    ;;
+    *-prefer-old)
+      prefer_old="$2"
+      shift
+    ;;
+    *-enforceipv4)
+      enforceipv4="$2"
+      shift
+    ;;
+    *-sslvalidation)
+      sslvalidation="$2"
       shift
     ;;
     *)
-      echo Unknown parameter $1.
-      echo 'Usage: http_download --host $HOST --path $PATH --outdir $OUT'
+      echo "Unknown parameter $1." >&2
       exit 1
     ;;
   esac
   shift
 done
 
-FILE="${MYPATH##*/}"
-
-if [ -z "$MYHOST" ]; then
-  echo "ERROR: no hostname is given via --host parameter!"
-  exit 1
-fi
-if [ -z "$MYPATH" ]; then
-  echo "ERROR: no path is given via --path parameter!"
-  exit 1
-fi
-if [ -z "$MYOUTDIR" ]; then
-  echo "ERROR: no output directory is given via --outdir parameter!"
-  exit 1
-fi
-if [ -z "$FILE" ]; then
-  echo "ERROR: no file name was stripped from $MYPATH"
+if [ -z "$outdir" ]; then
+  echo "ERROR: no output directory is given via --outdir parameter!" >&2
   exit 1
 fi
 
-cd "$MYOUTDIR"
-# yes, not nice, but too many broken servers out there who either break with IPv6 or have broken certificates :/
-# let's use verify service to validate the downloaded source
-if [ -n "$MYFILENAME" ]; then
-  exec /usr/bin/wget -4 --no-check-certificate -q -O "${MYFILENAME##*/}" "$MYPROTOCOL://${MYHOST}${MYPORT}/$MYPATH"
-else
-  exec /usr/bin/wget -4 --no-check-certificate -q "$MYPROTOCOL://${MYHOST}${MYPORT}/$MYPATH"
+if [ -z "$url" ]; then
+  if [ -z "$host" -o -z "$path" ]; then
+    echo "ERROR: need url or host, path " >&2
+    exit 1
+  fi
+
+  url="$protocol://${host}${port:+:$port}/$path"
 fi
 
+if [ -z "$filename" ]; then
+  filename="${url##*/}"
+  if [ -z "$filename" ]; then
+    echo "ERROR: can't determine file name from $url" >&2
+    exit 1
+  fi
+fi
+
+if [ "$prefer_old" = "enable" -a -e ".old/_service:download_url:$filename" ]; then
+  ln ".old/_service:download_url:$filename" "$outdir/$filename"
+  exit 0
+fi
+
+if [ "$enforceipv4" = "enable" ]; then
+  args+=("-4")
+fi
+if [ "$sslvalidation" = "disable" ]; then
+  args+=("--no-check-certificate")
+fi
+args+=(-O "${filename##*/}")
+
+cd "$outdir"
+set -- /usr/bin/wget "${args[@]}" "$url"
+exec "$@"
