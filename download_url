@@ -30,6 +30,8 @@ enforceipv4='enable'
 sslvalidation='disable'
 args=()
 
+use_manifest=0
+
 while test $# -gt 0; do
   case $1 in
     *-host)
@@ -72,6 +74,14 @@ while test $# -gt 0; do
       sslvalidation="$2"
       shift
     ;;
+    *-download-manifest)
+      download_manifest=$2
+      shift
+      path=`pwd`
+      manifest_file="$path/$download_manifest"
+      args+=("-i" $manifest_file)
+      use_manifest=1
+    ;;
     *)
       echo "Unknown parameter $1." >&2
       exit 1
@@ -85,7 +95,7 @@ if [ -z "$outdir" ]; then
   exit 1
 fi
 
-if [ -z "$url" ]; then
+if [ -z "$url" -a $use_manifest -lt 1 ]; then
   if [ -z "$host" -o -z "$path" ]; then
     echo "ERROR: need url or host, path " >&2
     exit 1
@@ -94,12 +104,21 @@ if [ -z "$url" ]; then
   url="$protocol://${host}${port:+:$port}/$path"
 fi
 
-if [ -z "$filename" ]; then
+if [ "$enforceipv4" = "enable" ]; then
+  args+=("-4")
+fi
+
+if [ "$sslvalidation" = "disable" ]; then
+  args+=("--no-check-certificate")
+fi
+
+if [ -z "$filename" -a $use_manifest -lt 1 ]; then
   filename="${url##*/}"
   if [ -z "$filename" ]; then
     echo "ERROR: can't determine file name from $url" >&2
     exit 1
   fi
+  args+=(-O "${filename##*/}")
 fi
 
 if [ "$prefer_old" = "enable" -a -e ".old/_service:download_url:$filename" ]; then
@@ -107,14 +126,10 @@ if [ "$prefer_old" = "enable" -a -e ".old/_service:download_url:$filename" ]; th
   exit 0
 fi
 
-if [ "$enforceipv4" = "enable" ]; then
-  args+=("-4")
-fi
-if [ "$sslvalidation" = "disable" ]; then
-  args+=("--no-check-certificate")
-fi
-args+=(-O "${filename##*/}")
-
 cd "$outdir"
+if [ -z "$url" ];then
+set -- /usr/bin/wget "${args[@]}"
+else
 set -- /usr/bin/wget "${args[@]}" "$url"
+fi
 exec "$@"
