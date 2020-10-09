@@ -38,5 +38,8 @@
     <allowedvalue>enable</allowedvalue>
     <allowedvalue>disable</allowedvalue>
   </parameter>
+  <parameter name="download-manifest">
+    <description>list of urls to download (parameter "filename" will be ignored)</description>
+  </parameter>
 </service>
 
