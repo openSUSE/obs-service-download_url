@@ -27,7 +27,7 @@ host=
 port=
 prefer_old=
 enforceipv4='enable'
-sslvalidation='disable'
+sslvalidation='enable'
 args=()
 
 use_manifest=0
