@@ -112,8 +112,10 @@ if [ "$sslvalidation" = "disable" ]; then
   args+=("--no-check-certificate")
 fi
 
-if [ -z "$filename" -a $use_manifest -lt 1 ]; then
-  filename="${url##*/}"
+if [ $use_manifest -lt 1 ]; then
+  if [ -z "$filename" ]; then
+    filename="${url##*/}"
+  fi
   if [ -z "$filename" ]; then
     echo "ERROR: can't determine file name from $url" >&2
     exit 1
