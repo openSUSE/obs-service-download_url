@@ -75,7 +75,7 @@ while test $# -gt 0; do
       shift
     ;;
     *-download-manifest)
-      download_manifest=$2
+      download_manifest="${2##*/}"
       shift
       path=`pwd`
       manifest_file="$path/$download_manifest"
@@ -102,6 +102,11 @@ if [ -z "$url" -a $use_manifest -lt 1 ]; then
   fi
 
   url="$protocol://${host}${port:+:$port}/$path"
+fi
+
+if [ "${url:0:1}" == "-" ]; then
+    echo "ERROR: illegal url" >&2
+    exit 1
 fi
 
 if [ "$enforceipv4" = "enable" ]; then
