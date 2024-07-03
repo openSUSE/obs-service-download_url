@@ -134,9 +134,8 @@ if [ "$prefer_old" = "enable" -a -e ".old/_service:download_url:$filename" ]; th
 fi
 
 cd "$outdir"
-if [ -z "$url" ];then
-set -- /usr/bin/wget "${args[@]}"
-else
-set -- /usr/bin/wget "${args[@]}" "$url"
+if [ -n "$url" ];then
+  args+=($url)
 fi
+set -- /usr/bin/wget "${args[@]}"
 exec "$@"
