@@ -104,11 +104,6 @@ if [ -z "$url" -a $use_manifest -lt 1 ]; then
   url="$protocol://${host}${port:+:$port}/$path"
 fi
 
-if [ "${url:0:1}" == "-" ]; then
-    echo "ERROR: illegal url" >&2
-    exit 1
-fi
-
 if [ "$enforceipv4" = "enable" ]; then
   args+=("-4")
 fi
@@ -135,6 +130,7 @@ fi
 
 cd "$outdir"
 if [ -n "$url" ];then
+  args+=('--')
   args+=($url)
 fi
 set -- /usr/bin/wget "${args[@]}"
